@@ -6,11 +6,12 @@ ENV POETRY_VENV=/app/.venv
 
 RUN python3 -m pip install --upgrade pip
 RUN pip3 install virtualenv
+RUN pip3 install poetry
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -qq update \
     && apt-get -qq install --no-install-recommends \
-    python${PYTHON_VERSION}-venv \
+    && python${PYTHON_VERSION}-venv \
     ffmpeg
 
 RUN python3 -m venv $POETRY_VENV \
