@@ -11,7 +11,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -qq update \
     && apt-get -qq install --no-install-recommends \
     # python${PYTHON_VERSION} \
-    python3.8-venv \
+    python3.10-venv \
     # python3-pip \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
