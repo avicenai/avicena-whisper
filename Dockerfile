@@ -1,7 +1,6 @@
 FROM swaggerapi/swagger-ui:v4.18.2 AS swagger-ui
 FROM huggingface/transformers-pytorch-gpu
 
-ENV PYTHON_VERSION=3.8
 ENV POETRY_VENV=/app/.venv
 
 RUN python3 -m pip install --upgrade pip
@@ -11,7 +10,7 @@ RUN pip3 install poetry
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -qq update \
     && apt-get -qq install --no-install-recommends \
-    && python${PYTHON_VERSION}-venv \
+    && python-venv \
     ffmpeg
 
 RUN python3 -m venv $POETRY_VENV \
