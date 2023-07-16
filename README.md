@@ -1,188 +1,179 @@
-![Release](https://img.shields.io/github/v/release/ahmetoner/whisper-asr-webservice.svg)
-![Docker Pulls](https://img.shields.io/docker/pulls/onerahmet/openai-whisper-asr-webservice.svg)
-![Build](https://img.shields.io/github/actions/workflow/status/ahmetoner/whisper-asr-webservice/docker-publish.yml.svg)
-![Licence](https://img.shields.io/github/license/ahmetoner/whisper-asr-webservice.svg)
-# Whisper ASR Webservice
+---
+title: Faster Whisper Webui
+emoji: 🚀
+colorFrom: indigo
+colorTo: blue
+sdk: gradio
+sdk_version: 3.23.0
+app_file: app.py
+pinned: false
+license: apache-2.0
+duplicated_from: aadnk/faster-whisper-webui
+---
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
 
-Whisper is a general-purpose speech recognition model. It is trained on a large dataset of diverse audio and is also a multi-task model that can perform multilingual speech recognition as well as speech translation and language identification. For more details: [github.com/openai/whisper](https://github.com/openai/whisper/)
+# Running Locally
 
-## Features
-Current release (v1.1.1) supports following whisper models:
-
-- [openai/whisper](https://github.com/openai/whisper)@[v20230124](https://github.com/openai/whisper/releases/tag/v20230124)
-- [faster-whisper](https://github.com/guillaumekln/faster-whisper)@[0.4.1](https://github.com/guillaumekln/faster-whisper/releases/tag/v0.4.1)
-
-## Usage
-
-Whisper ASR Webservice now available on Docker Hub. You can find the latest version of this repository on docker hub for CPU and GPU.
-
-Docker Hub: <https://hub.docker.com/r/onerahmet/openai-whisper-asr-webservice>
-
-For CPU:
-
-```sh
-docker pull onerahmet/openai-whisper-asr-webservice:latest
-docker run -d -p 9000:9000 -e ASR_MODEL=base -e ASR_ENGINE=openai_whisper onerahmet/openai-whisper-asr-webservice:latest
+To run this program locally, first install Python 3.9+ and Git. Then install Pytorch 10.1+ and all the other dependencies:
+```
+pip install -r requirements.txt
 ```
 
-For GPU:
+You can find detailed instructions for how to install this on Windows 10/11 [here (PDF)](docs/windows/install_win10_win11.pdf).
 
-```sh
-docker pull onerahmet/openai-whisper-asr-webservice:latest-gpu
-docker run -d --gpus all -p 9000:9000 -e ASR_MODEL=base -e ASR_ENGINE=openai_whisper onerahmet/openai-whisper-asr-webservice:latest-gpu
+Finally, run the full version (no audio length restrictions) of the app with parallel CPU/GPU enabled:
+```
+python app.py --input_audio_max_duration -1 --server_name 127.0.0.1 --auto_parallel True
 ```
 
-For MacOS (CPU only):
-
-GPU passthrough does not work on macOS due to fundamental design limitations of Docker. Docker actually runs containers within a LinuxVM on macOS. If you wish to run GPU-accelerated containers, I'm afraid Linux is your only option.
-
-The `:latest` image tag provides both amd64 and arm64 architectures:
-
-```sh
-docker run -d -p 9000:9000 -e ASR_MODEL=base -e ASR_ENGINE=openai_whisper onerahmet/openai-whisper-asr-webservice:latest
+You can also run the CLI interface, which is similar to Whisper's own CLI but also supports the following additional arguments:
+```
+python cli.py \
+[--vad {none,silero-vad,silero-vad-skip-gaps,silero-vad-expand-into-gaps,periodic-vad}] \
+[--vad_merge_window VAD_MERGE_WINDOW] \
+[--vad_max_merge_size VAD_MAX_MERGE_SIZE] \
+[--vad_padding VAD_PADDING] \
+[--vad_prompt_window VAD_PROMPT_WINDOW]
+[--vad_cpu_cores NUMBER_OF_CORES]
+[--vad_parallel_devices COMMA_DELIMITED_DEVICES]
+[--auto_parallel BOOLEAN]
+```
+In addition, you may also use URL's in addition to file paths as input.
+```
+python cli.py --model large --vad silero-vad --language Japanese "https://www.youtube.com/watch?v=4cICErqqRSM"
 ```
 
-```sh
-# Interactive Swagger API documentation is available at http://localhost:9000/docs
+Rather than supplying arguments to `app.py` or `cli.py`, you can also use the configuration file [config.json5](config.json5). See that file for more information. 
+If you want to use a different configuration file, you can use the `WHISPER_WEBUI_CONFIG` environment variable to specify the path to another file.
+
+### Multiple Files
+
+You can upload multiple files either through the "Upload files" option, or as a playlist on YouTube. 
+Each audio file will then be processed in turn, and the resulting SRT/VTT/Transcript will be made available in the "Download" section. 
+When more than one file is processed, the UI will also generate a "All_Output" zip file containing all the text output files.
+## Diarization
+To detect different speakers in the audio, you can use the [whisper-diarization](https://gitlab.com/aadnk/whisper-diarization) application. 
+Download the JSON file after running Whisper on an audio file, and then run app.py in the 
+whisper-diarization repository with the audio file and the JSON file as arguments.
+## Whisper Implementation
+You can choose between using `whisper` or `faster-whisper`. [Faster Whisper](https://github.com/guillaumekln/faster-whisper) as a drop-in replacement for the 
+default Whisper which achieves up to a 4x speedup and 2x reduction in memory usage. 
+You can install the requirements for a specific Whisper implementation in `requirements-fasterWhisper.txt` 
+or `requirements-whisper.txt`:
 ```
-![Swagger UI](https://github.com/ahmetoner/whisper-asr-webservice/blob/main/docs/assets/img/swagger-ui.png?raw=true)
-
-Available ASR_MODELs are `tiny`, `base`, `small`, `medium`, `large`, `large-v1` and `large-v2`. Please note that `large` and `large-v2` are the same model.
-
-For English-only applications, the `.en` models tend to perform better, especially for the `tiny.en` and `base.en` models. We observed that the difference becomes less significant for the `small.en` and `medium.en` models.
-
-## Run (Development Environment)
-
-Install poetry with following command:
-
-```sh
-pip3 install poetry
+pip install -r requirements-fasterWhisper.txt
 ```
-
-Install torch with following command:
-
-```sh
-# just for GPU:
-pip3 install torch==1.13.0+cu117 -f https://download.pytorch.org/whl/torch
+And then run the App or the CLI with the `--whisper_implementation faster-whisper` flag:
 ```
-
-Install packages:
-
-```sh
-poetry install
+python app.py --whisper_implementation faster-whisper --input_audio_max_duration -1 --server_name 127.0.0.1 --server_port 7860 --auto_parallel True
 ```
-
-Starting the Webservice:
-
-```sh
-poetry run gunicorn --bind 0.0.0.0:9000 --workers 1 --timeout 0 app.webservice:app -k uvicorn.workers.UvicornWorker
+You can also select the whisper implementation in `config.json5`:
+```json5
+{
+    "whisper_implementation": "faster-whisper"
+}
 ```
+### GPU Acceleration
 
-With docker compose:
+In order to use GPU acceleration with Faster Whisper, both CUDA 11.2 and cuDNN 8 must be installed. You may want to install it in a virtual environment like Anaconda.
 
-For CPU:
-```sh
-docker-compose up --build
+## Google Colab
+
+You can also run this Web UI directly on [Google Colab](https://colab.research.google.com/drive/1qeTSvi7Bt_5RMm88ipW4fkcsMOKlDDss?usp=sharing), if you haven't got a GPU powerful enough to run the larger models.
+
+See the [colab documentation](docs/colab.md) for more information.
+
+## Parallel Execution
+
+You can also run both the Web-UI or the CLI on multiple GPUs in parallel, using the `vad_parallel_devices` option. This takes a comma-delimited list of 
+device IDs (0, 1, etc.) that Whisper should be distributed to and run on concurrently:
 ```
-
-For GPU:
-```sh
-docker-compose up --build -f docker-compose.gpu.yml
-```
-
-## Quick start
-
-After running the docker image interactive Swagger API documentation is available at [localhost:9000/docs](http://localhost:9000/docs)
-
-There are 2 endpoints available:
-
-- /asr (TXT, VTT, SRT, TSV, JSON)
-- /detect-language
-
-## Automatic Speech recognition service /asr
-
-If you choose the **transcribe** task, transcribes the uploaded file. Both audio and video files are supported (as long as ffmpeg supports it).
-
-Note that you can also upload video formats directly as long as they are supported by ffmpeg.
-
-You can get TXT, VTT, SRT, TSV and JSON output as a file from /asr endpoint.
-
-You can provide the language or it will be automatically recognized.
-
-If you choose the **translate** task it will provide an English transcript no matter which language was spoken.
-
-You can enable word level timestamps output by `word_timestamps` parameter (only with `Faster Whisper` for now).
-
-Returns a json with following fields:
-
-- **text**: Contains the full transcript
-- **segments**: Contains an entry per segment. Each entry provides `timestamps`, `transcript`, `token ids`, `word level timestamps` and other metadata
-- **language**: Detected or provided language (as a language code)
-
-## Language detection service /detect-language
-
-Detects the language spoken in the uploaded file. For longer files it only processes first 30 seconds.
-
-Returns a json with following fields:
-
-- **detected_language**
-- **language_code**
-
-## Build
-
-Build .whl package
-
-```sh
-poetry build
+python cli.py --model large --vad silero-vad --language Japanese \
+--vad_parallel_devices 0,1 "https://www.youtube.com/watch?v=4cICErqqRSM"
 ```
 
-Configuring the ASR Engine
+Note that this requires a VAD to function properly, otherwise only the first GPU will be used. Though you could use `period-vad` to avoid taking the hit
+of running Silero-Vad, at a slight cost to accuracy.
 
-```sh
-export ASR_ENGINE=openai_whisper
+This is achieved by creating N child processes (where N is the number of selected devices), where Whisper is run concurrently. In `app.py`, you can also 
+set the `vad_process_timeout` option. This configures the number of seconds until a process is killed due to inactivity, freeing RAM and video memory. 
+The default value is 30 minutes.
+
 ```
-or
-```sh
-export ASR_ENGINE=faster_whisper
-```
-
-Configuring the Model
-
-```sh
-export ASR_MODEL=base
+python app.py --input_audio_max_duration -1 --vad_parallel_devices 0,1 --vad_process_timeout 3600
 ```
 
-## Docker Build
-
-### For CPU
-
-```sh
-# Build Image
-docker build -t whisper-asr-webservice .
-
-# Run Container
-docker run -d -p 9000:9000 whisper-asr-webservice
-# or
-docker run -d -p 9001:9000 -e ASR_MODEL=base whisper-asr-webservice3
+To execute the Silero VAD itself in parallel, use the `vad_cpu_cores` option:
+```
+python app.py --input_audio_max_duration -1 --vad_parallel_devices 0,1 --vad_process_timeout 3600 --vad_cpu_cores 4
 ```
 
-### For GPU
+You may also use `vad_process_timeout` with a single device (`--vad_parallel_devices 0`), if you prefer to always free video memory after a period of time.
 
-```sh
-# Build Image
-docker build -f Dockerfile.gpu -t whisper-asr-webservice-gpu .
+### Auto Parallel
 
-# Run Container
-docker run -d --gpus all -p 9000:9000 whisper-asr-webservice-gpu
-# or
-docker run -d --gpus all -p 9000:9000 -e ASR_MODEL=base whisper-asr-webservice-gpu
+You can also set `auto_parallel` to `True`. This will set `vad_parallel_devices` to use all the GPU devices on the system, and `vad_cpu_cores` to be equal to the number of
+cores (up to 8):
+```
+python app.py --input_audio_max_duration -1 --auto_parallel True
 ```
 
-## Cache
-The ASR model is downloaded each time you start the container, using the large model this can take some time. If you want to decrease the time it takes to start your container by skipping the download, you can store the cache directory (/root/.cache/whisper) to an persistent storage. Next time you start your container the ASR Model will be taken from the cache instead of being downloaded again.
+# Docker
 
-**Important this will prevent you from receiving any updates to the models.**
- 
-```sh
-docker run -d -p 9000:9000 -e ASR_MODEL=large -v //c/tmp/whisper:/root/.cache/whisper onerahmet/openai-whisper-asr-webservice:latest
+To run it in Docker, first install Docker and optionally the NVIDIA Container Toolkit in order to use the GPU. 
+Then either use the GitLab hosted container below, or check out this repository and build an image:
+```
+sudo docker build -t whisper-webui:1 .
+```
+
+You can then start the WebUI with GPU support like so:
+```
+sudo docker run -d --gpus=all -p 7860:7860 whisper-webui:1
+```
+
+Leave out "--gpus=all" if you don't have access to a GPU with enough memory, and are fine with running it on the CPU only:
+```
+sudo docker run -d -p 7860:7860 whisper-webui:1
+```
+
+# GitLab Docker Registry
+
+This Docker container is also hosted on GitLab:
+
+```
+sudo docker run -d --gpus=all -p 7860:7860 registry.gitlab.com/aadnk/whisper-webui:latest
+```
+
+## Custom Arguments
+
+You can also pass custom arguments to `app.py` in the Docker container, for instance to be able to use all the GPUs in parallel (replace administrator with your user):
+```
+sudo docker run -d --gpus all -p 7860:7860 \
+--mount type=bind,source=/home/administrator/.cache/whisper,target=/root/.cache/whisper \
+--mount type=bind,source=/home/administrator/.cache/huggingface,target=/root/.cache/huggingface \
+--restart=on-failure:15 registry.gitlab.com/aadnk/whisper-webui:latest \
+app.py --input_audio_max_duration -1 --server_name 0.0.0.0 --auto_parallel True \
+--default_vad silero-vad --default_model_name large
+```
+
+You can also call `cli.py` the same way:
+```
+sudo docker run --gpus all \
+--mount type=bind,source=/home/administrator/.cache/whisper,target=/root/.cache/whisper \
+--mount type=bind,source=/home/administrator/.cache/huggingface,target=/root/.cache/huggingface \
+--mount type=bind,source=${PWD},target=/app/data \
+registry.gitlab.com/aadnk/whisper-webui:latest \
+cli.py --model large --auto_parallel True --vad silero-vad \
+--output_dir /app/data /app/data/YOUR-FILE-HERE.mp4
+```
+
+## Caching
+
+Note that the models themselves are currently not included in the Docker images, and will be downloaded on the demand.
+To avoid this, bind the directory /root/.cache/whisper to some directory on the host (for instance /home/administrator/.cache/whisper), where you can (optionally) 
+prepopulate the directory with the different Whisper models. 
+```
+sudo docker run -d --gpus=all -p 7860:7860 \
+--mount type=bind,source=/home/administrator/.cache/whisper,target=/root/.cache/whisper \
+registry.gitlab.com/aadnk/whisper-webui:latest
 ```
