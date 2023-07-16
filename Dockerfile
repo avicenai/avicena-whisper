@@ -3,6 +3,7 @@ FROM nvidia/cuda:12.2.0-base-ubuntu22.04
 
 ENV PYTHON_VERSION=3.10
 ENV POETRY_VENV=/app/.venv
+ENV TRANSFORMERS_CACHE=/app/.cache
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -qq update \
@@ -22,7 +23,6 @@ RUN python3 -m venv $POETRY_VENV \
     && $POETRY_VENV/bin/pip install poetry~=1.5.1
 
 ENV PATH="${PATH}:${POETRY_VENV}/bin"
-# ENV HF_HOME="/root/cache/hf_cache_home"
 
 WORKDIR /app
 
