@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from whisper import tokenizer
 
-ASR_ENGINE = os.getenv("ASR_ENGINE", "openai_whisper")
+ASR_ENGINE = os.getenv("ASR_ENGINE", "faster_whisper")
 if ASR_ENGINE == "faster_whisper":
     from .faster_whisper.core import transcribe, language_detection
 else:
