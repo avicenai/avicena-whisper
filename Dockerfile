@@ -31,8 +31,6 @@ ENV HOME=/user \
 
 WORKDIR $HOME/app
 
-COPY --chown=user . $HOME/app
-
 COPY poetry.lock pyproject.toml ./
 
 RUN poetry config virtualenvs.in-project true
@@ -45,4 +43,5 @@ COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui-bundle.js swagger-ui-ass
 RUN poetry install
 RUN $POETRY_VENV/bin/pip install torch==1.13.0+cu117 -f https://download.pytorch.org/whl/torch
 
+COPY --chown=user . $HOME/app
 CMD gunicorn --bind 0.0.0.0:9000 --workers 1 --timeout 0 app.webservice:app -k uvicorn.workers.UvicornWorker
