@@ -1,7 +1,7 @@
 FROM swaggerapi/swagger-ui:v4.18.2 AS swagger-ui
 FROM huggingface/transformers-pytorch-gpu
 
-ENV PYTHON_VERSION=3.10
+ENV PYTHON_VERSION=3.8
 ENV POETRY_VENV=/app/.venv
 
 RUN python3 -m pip install --upgrade pip
