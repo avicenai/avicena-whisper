@@ -3,7 +3,6 @@ FROM nvidia/cuda:12.2.0-base-ubuntu22.04
 
 ENV PYTHON_VERSION=3.10
 ENV POETRY_VENV=/app/.venv
-ENV TRANSFORMERS_CACHE=/app/.cache
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -qq update \
@@ -22,14 +21,9 @@ RUN python3 -m venv $POETRY_VENV \
     && $POETRY_VENV/bin/pip install -U pip setuptools \
     && $POETRY_VENV/bin/pip install poetry~=1.5.1
 
-RUN useradd -m -u 1000 user
+ENV PATH="${PATH}:${POETRY_VENV}/bin"
 
-USER user
-
-ENV HOME=/user \
-    PATH="${PATH}:${POETRY_VENV}/bin"
-
-WORKDIR $HOME/app
+WORKDIR /app
 
 COPY poetry.lock pyproject.toml ./
 
@@ -43,5 +37,15 @@ COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui-bundle.js swagger-ui-ass
 RUN poetry install
 RUN $POETRY_VENV/bin/pip install torch==1.13.0+cu117 -f https://download.pytorch.org/whl/torch
 
+RUN useradd -m -u 1000 user
+
+USER user
+
+ENV HOME=/home/user \
+    TRANSFORMERS_CACHE=/.cache
+
+WORKDIR $HOME/app
+
 COPY --chown=user . $HOME/app
+
 CMD gunicorn --bind 0.0.0.0:9000 --workers 1 --timeout 0 app.webservice:app -k uvicorn.workers.UvicornWorker
