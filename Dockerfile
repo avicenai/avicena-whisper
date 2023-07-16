@@ -15,13 +15,11 @@ WORKDIR /app
 
 COPY poetry.lock pyproject.toml ./
 
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+RUN poetry config virtualenvs.create false \
+    && poetry install --only main --no-interaction --no-ansi
 
 COPY . .
 COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui.css swagger-ui-assets/swagger-ui.css
 COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui-bundle.js swagger-ui-assets/swagger-ui-bundle.js
-
-RUN poetry install --no-dev
 
 CMD gunicorn --bind 0.0.0.0:9000 --workers 1 --timeout 0 app.webservice:app -k uvicorn.workers.UvicornWorker
