@@ -1,21 +1,25 @@
 FROM swaggerapi/swagger-ui:v4.18.2 AS swagger-ui
 FROM huggingface/transformers-pytorch-gpu
 
-ENV PYTHON_VERSION=3.10
+# ENV PYTHON_VERSION=3.10
 ENV POETRY_VENV=/app/.venv
+
+RUN apt-get -y install python3-tk
+RUN python3 -m pip install --upgrade pip
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -qq update \
     && apt-get -qq install --no-install-recommends \
-    python${PYTHON_VERSION} \
-    python${PYTHON_VERSION}-venv \
-    python3-pip \
+    # python${PYTHON_VERSION} \
+    python3.8-venv \
+    # python3-pip \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-RUN ln -s -f /usr/bin/python${PYTHON_VERSION} /usr/bin/python3 && \
-    ln -s -f /usr/bin/python${PYTHON_VERSION} /usr/bin/python && \
-    ln -s -f /usr/bin/pip3 /usr/bin/pip
+
+# RUN ln -s -f /usr/bin/python${PYTHON_VERSION} /usr/bin/python3 && \
+#     ln -s -f /usr/bin/python${PYTHON_VERSION} /usr/bin/python && \
+#     ln -s -f /usr/bin/pip3 /usr/bin/pip
 
 RUN python3 -m venv $POETRY_VENV \
     && $POETRY_VENV/bin/pip install -U pip setuptools \
