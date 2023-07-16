@@ -22,9 +22,16 @@ RUN python3 -m venv $POETRY_VENV \
     && $POETRY_VENV/bin/pip install -U pip setuptools \
     && $POETRY_VENV/bin/pip install poetry~=1.5.1
 
-ENV PATH="${PATH}:${POETRY_VENV}/bin"
+RUN useradd -m -u 1000 user
 
-WORKDIR /app
+USER user
+
+ENV HOME=/user \
+    PATH="${PATH}:${POETRY_VENV}/bin"
+
+WORKDIR $HOME/app
+
+COPY --chown=user . $HOME/app
 
 COPY poetry.lock pyproject.toml ./
 
