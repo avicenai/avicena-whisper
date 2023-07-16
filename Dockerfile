@@ -42,7 +42,9 @@ RUN useradd -m -u 1000 user
 USER user
 
 ENV HOME=/home/user \
-    TRANSFORMERS_CACHE=/.cache
+    TRANSFORMERS_CACHE=/.cache \
+    ASR_MODEL="medium" \
+    ASR_ENGINE="faster_whisper"
 
 WORKDIR $HOME/app
 
