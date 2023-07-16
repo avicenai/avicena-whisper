@@ -1,7 +1,7 @@
 FROM swaggerapi/swagger-ui:v4.18.2 AS swagger-ui
 FROM nvidia/cuda:12.2.0-base-ubuntu22.04
 
-ENV PYTHON_VERSION=3.8
+ENV PYTHON_VERSION=3.10
 ENV POETRY_VENV=/app/.venv
 
 RUN export DEBIAN_FRONTEND=noninteractive \
