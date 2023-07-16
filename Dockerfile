@@ -16,7 +16,7 @@ WORKDIR /app
 COPY poetry.lock pyproject.toml ./
 
 RUN poetry config virtualenvs.create false
-RUN poetry install
+RUN poetry install --no-root
 
 COPY . .
 COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui.css swagger-ui-assets/swagger-ui.css
