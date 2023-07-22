@@ -15,7 +15,7 @@ services:
     environment:
       - ASR_MODEL=base
     ports:
-      - 9000:80
+      - 80:9000
     volumes:
       - ./app:/app/app
       - cache-pip:/root/.cache/pip
